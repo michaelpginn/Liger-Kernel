@@ -185,6 +185,12 @@ def fused_linear_jsd_forward(
             impl=jsd_impl,
             mode=jsd_mode,
         )
+
+        thr = 0.05 / n_non_ignore
+        over = loss_chunk > thr
+        student_prob_chunk = torch.where(over, torch.zeros_like(student_prob_chunk), student_prob_chunk)  # dX
+        loss_chunk = loss_chunk.clamp(max=thr)
+
         # Accumulate this chunk's loss into the scalar; the (chunk_size, V)
         # ``loss_chunk`` tensor is freed at the end of this iteration.
         total_loss = total_loss + loss_chunk.sum()
